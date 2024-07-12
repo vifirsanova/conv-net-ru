@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+    <title>Как обучить сверточную нейронную сеть для анализа тональности</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #282828;
+        }
+        code {
+            background-color: #282828;
+            padding: 2px 5px;
+            font-family: monospace;
+            border-radius: 3px;
+        }
+        pre {
+            position: relative;
+            background-color: #282828;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .code-comment {
+            color: #75715e;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .copy-btn:focus {
+            outline: none;
+        }
+        .copy-btn:hover {
+            background: #0056b3;
+        }
+        header {
+            background: #282828;
+            color: #F9F6EF;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header .logo {
+            display: flex;
+            align-items: center;
+        }
+        header .logo img {
+            border-radius: 50%;
+            margin-right: 10px;
+            width: 50px;
+            height: 50px;
+        }
+        header .nav {
+            display: flex;
+            align-items: center;
+        }
+        header .nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        header .social-media {
+            display: flex;
+            align-items: center;
+        }
+        header .social-media a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+        header .social-media img {
+            width: 25px;
+            height: 25px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .blog-title {
+            margin: 20px 0;
+        }
+        .content-block {
+            max-width: 50%;
+            margin: 0 auto 20px;
+            text-align: center;
+        }
+        .illustration {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .illustration img {
+            max-width: 100%;
+            height: auto;
+        }
+        .author-info {
+            margin-top: 40px;
+            text-align: center;
+        }
+        .head {
+            color: #fff;
+            font-size: 2em;
+            font-family: monospace;
+            text-align: left;
+        }
+        .intro {
+            text-align: right;
+            font-family: monospace;
+        }
+          .model-summary {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .layer-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    .layer-table th, .layer-table td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+    }
+    .layer-header {
+        background-color: #f2f2f2;
+    }
+    </style>
+</head>
+<body>
+            <header>
+        <div class="logo">
+            <h1 class="head">print("Как обучить сверточную нейронную сеть для анализа тональности")</h1>
+        </div>
+        <div class="nav">
+            <a class="head" href="https://vifirsanova.github.io/">Блог</a>
+        </div>
+        <div class="social-media">
+            <a href="https://t.me/empi_ai" target="_blank"><i class="fa fa-send"></i>
+            </a>
+            <a href="https://linkedin.com/in/victoria-firsanova-8795301b2" target="_blank"><i class="fa fa-linkedin fa-fw"></i>
+            </a>
+            <a href="https://github.com/vifirsanova" target="_blank"><i class="fa fa-github"></i>
+            </a>
+        </div>
+        </header>
+        <div class="container">
+        <h3 class="intro">Когда я читала сказки, я твердо знала, что такого на свете не бывает! А теперь я сама в них угодила!<br> — Льюис Кэрролл. Приключения Алисы в стране чудес</h3>
+        <p>Автор: <a href="https://vifirsanova.github.io/">В. Фирсанова</a><br>Переводы: <a href="https://vifirsanova.github.io/conv-net/">Английский</a></p>
+        <p>One of the questions I get asked all the time is what is the best way to start practicing Machine Learning (ML). I wish I had known the answer when I was training my first neural network model! Honestly, I'm a practicing ML researcher and educator, and I still do not have the answer. Right or wrong, I usually suggest newbies trying to train a Convolutional Neural Network (CNN). This elegant architecture helped me get the intuition behind ML. In this post, we'll go through the steps to train a CNN for sentiment analysis using Python. Sentiment analysis is a popular Natural Language Processing (NLP) task that involves classifying text into categories such as positive, negative, or neutral.</p>
+        <h2>How convolutional neural network works</h2>
+        <p>A Convolutional Neural Network (CNN) processes structured grid data such as images. Still, it works great on other types of natural signal data, such as texts. CNNs learn to detect patterns of an object by applying convolutional filters called <strong>kernels</strong>. We can use these patterns to perform object categorization. For example, we can teach our model to distinguish cats and dogs based on their features (like paws and whiskers). But what is convolution? </p>
+          <p><strong>Convolution</strong> is a mathematical operation that combines two functions (or signals) to produce a third one. For example, image convolution combines an initial image (the first signal) with a kernel (the second signal; think of it as a mask to highlight edges, effects, or other specific features or patterns) to produce a feature map (the third signal) indicating the most significant features such as edges of a depicted object for further processing (or paws and whiskers for image categorization!).</p>
+        <div class="illustration">
+            <img src="https://raw.githubusercontent.com/vifirsanova/conv-net/main/convolution.png" alt="Convolution Operation Illustration">
+        </div>
+        <p>Let's take a detailed look on the convolution operation. As you remember, we need three components (functions or signals):</p>
+        <p><strong>Kernel:</strong> A small matrix (e.g., 3x3, 5x5) designed to extract patterns or features from the input data such as object edges or textures in images. In CNN, kernels contain learnable weights adjusted during the model training to capture the significant features.</p>
+        <p><strong>Input:</strong> Vectorized input signal, for example, 2D array of pixel values representing a grayscale image or a 3D array representing height, width, and RGB channels.</p>
+        <p><strong>Feature Map:</strong> The kernel slides over the input data. At each position, an element-wise multiplication is performed between the kernel and the corresponding input values. The result produces the output feature map.</p>
+
+        <h2>Essentials on text classification</h2>
+        <p><strong>Text Classification</strong> is assigning categories (classes or labels) to a given text. Sentiment analysis, topic labeling, and language detection are common types of text classification in NLP.</p>
+        <div class="illustration">
+            <img src="https://raw.githubusercontent.com/vifirsanova/conv-net/main/ml_stages.png" alt="Machine Learning Stages Illustration">
+        </div>
+        <p>Let's look at the main stages of the machine learning procedure:</p>
+        <p><strong>Data Processing:</strong> <br>(1) Data cleaning and text  pre-processing for removing artifacts such as HTML tags, filtering  unimportant information such as stop-words, converting to lower-case, etc.; <br>(2) Tokenization, i.e. splitting text into individual tokens (characters, words, subwords, sentences, etc.); <br>(3) Vectorization, i.e. converting the tokens into numerical vectors for machine processing.</p>
+        <p><strong>Model Training:</strong> Applying machine learning algorithms such as CNN to learn features from the vectorized data and solve the target task, for example, perform sentiment analysis.</p>
+        <p><strong>Model Evalutation:</strong> Getting the outputs using learned model weights to assess the model performance based on evaluation metrics, such as Precision, Recall, and F-Score.</p>
+        <h1>Let's train</h1>
+        <p>Now we'll go through the steps to train a CNN for sentiment analysis using Python and TensorFlow. We're going to use <a href="https://www.kaggle.com/datasets/columbine/imdb-dataset-sentiment-analysis-in-csv-format">IMDB Reviews Sentiment Analysis</a> dataset. Feel free to download this dataset or use different data.</p>
+        
+        <h2>1. Setting up the device: working on GPU</h2>
+        <p>First, we need to set up GPU:</p><pre><code class="python">
+import tensorflow as tf
+
+# Get a list of all physical devices (e.g., CPU, GPU)
+physical_devices = tf.config.list_physical_devices()
+
+# Iterate through each device in the list and print its information
+for device in physical_devices:
+    print(device)</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre><p>Now, by default, training will run on the GPU.
+
+Don't forget to enable GPU access in your Colab environment: `Runtime - Change runtime type - T4 GPU`.</p>
+        <h2>2. Dataset: downloading dataset from <a href="https://www.kaggle.com/datasets/kashishparmar02/social-media-sentiments-analysis-dataset?resource=download">Kaggle</a></h2>
+        <p>Next, we need to load and prepare the dataset. For this example, we will use a sample dataset of movie reviews:</p>
+        <pre>
+            <code class="python">
+# Import the `zipfile` module for working with ZIP archives
+import zipfile
+
+# Open the 'IMDB Dataset.csv.zip' ZIP archive in read mode
+with zipfile.ZipFile('IMDB Dataset.csv.zip', 'r') as zip_ref:
+    # Extract all files from the archive into the 'dataset' folder
+    zip_ref.extractall('dataset')</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre><h2>3. Exploratory data analysis: using data analysis methods to define variables for machine learning</h2>
+        <p>Let's look at our data:</p>
+        <pre>
+            <code class="python">
+# Import the pandas library for data manipulation
+import pandas as pd
+
+# Specify the path to the CSV file
+csv_file = '/content/dataset/IMDB Dataset.csv'
+
+# Read data from the CSV file and store it in a DataFrame
+data = pd.read_csv(csv_file)
+
+# Display the first 5 rows from the DataFrame
+data.head()</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+        <div class="illustration">
+            <img src="https://raw.githubusercontent.com/vifirsanova/conv-net/main/table.png" alt="Machine Learning Stages Illustration">
+        </div>
+        <p>Let's examine our data and look at the distribution of text lengths in the dataset.</p>                  <pre><code class="python">
+# Import the matplotlib.pyplot library for data visualization
+import matplotlib.pyplot as plt
+
+# Create a new column 'text_len' that contains the text length (number of words) for each review
+data['text_len'] = data['review'].apply(lambda x: len(x.split()))
+
+# Create a shape for the graph with size 8x6 inches
+plt.figure(figsize=(8, 6))
+# Construct a histogram for the distribution of text lengths with 50 bins (the reciprocal of the width of the columns on the graph) and black borders
+plt.hist(data['text_len'], bins=50, edgecolor='black')
+# Set the label for the X axis
+plt.xlabel('Length of Texts')
+# Set the label for the Y axis
+plt.ylabel('Frequency')
+# Set the title for the histogram
+plt.title('Histogram of Length of Texts')
+# Turn on the grid on the chart
+plt.grid(True)
+# Show the graph
+plt.show()</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+        <div class="illustration">
+        <img src="https://raw.githubusercontent.com/vifirsanova/conv-net/main/hist.png" alt="Machine Learning Stages Illustration">
+        </div>
+        <p>Based on the graph, you can set the upper value of the length of texts in the dataset before processing. Now let's look at the distribution of labels: is the dataset balanced?</p>                  <pre><code class="python">
+plt.figure(figsize=(10, 6))
+# Build a bar chart for label distribution
+data['labels'].value_counts().plot(kind='bar')
+plt.xlabel('Labels')
+plt.ylabel('Frequency')
+plt.title('Distribution of Labels')
+# Rotate the labels on the X axis by 45 degrees for better readability
+plt.xticks(rotation=45)
+# Turn on the Y axis grid
+plt.grid(axis='y')
+
+plt.show()</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+        <div class="illustration">
+        <img src="https://raw.githubusercontent.com/vifirsanova/conv-net/main/bar.png" alt="Machine Learning Stages Illustration">
+        </div>
+        <h2>4. Data tokenization and vectorization</h2>
+        <p>Let's write texts and labels into separate variables:</p>
+        <pre><code class="python">
+# Extract the column with review texts into the 'texts' variable
+texts = data['review']
+# Extract the column with labels into the 'labels' variable
+labels = data['labels']
+
+# Display the second review and its label (index 1, since indexing starts at 0)
+texts[1], labels[1]</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+
+        <p>Let's automate tokenization and vectorization processes using Keras. To perform word-level tokenization we'll set the maximum text length value using the length distribution histogram that we built earlier. We'll use this value to trim all texts exceeding this value to a given length and fill all short texts with zeros to the required length.</p>
+
+        <p> Why zeros? This operation called padding is necessary to make all matrices representing texts of the same length. Machine learning is based on matrix operations, and all the matrices must be the same size in order to be multiplied.</p>
+                  <pre><code class="python">
+# Import the necessary classes from the TensorFlow Keras library for working with text data
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+# Create a Tokenizer object
+tokenizer = Tokenizer()
+# We train the tokenizer using review texts
+tokenizer.fit_on_texts(texts)
+
+# Convert review texts into sequences of numbers (word indices)
+X = tokenizer.texts_to_sequences(texts)
+
+# Set the maximum length of sequences
+max_len = 500
+
+# Append or trim sequences to a given maximum length
+X = pad_sequences(X, maxlen=max_len)
+# Convert the labels to a numpy array
+y = labels.values
+
+X[1], y[1]</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+     <p>Now, let's create three samples using sklearn: training, validation and test sets.</p>
+                  <pre><code class="python">
+# Import the train_test_split function from the sklearn library
+from sklearn.model_selection import train_test_split
+
+# Split the data into a training sample (60%) and a temporary sample (40%)
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.4, random_state=42)
+# Split the temporary sample into validation (20%) and test (20%) samples
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+
+# Output the sizes of training, validation and test samples
+print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+print(f"X_val shape: {X_val.shape}, y_val shape: {y_val.shape}")
+print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+          <p>Let's look at the tokenization result: what does the training dictionary look like?</p>
+                  <pre><code class="python">
+# Output tokenizer dictionary elements representing word indexing
+# from 51 to 55 (indexing starts from 0)
+list(tokenizer.word_index.items())[50:55]</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <p>Set machine learning parameters: the size of the dictionary will be equal to the size of the embedding (vector representation).</p>
+          <pre><code class="python">
+# Calculate the size of the dictionary;
+# add 1 due to indexing from 1 (usually it starts from 0)
+vocab_size = len(tokenizer.word_index) + 1
+vocab_size</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+          <p>The next parameter is the number of classes, or categories</p>
+          <pre><code class="python">
+# Calculate the number of unique classes in labels y
+num_classes = len(set(y))
+num_classes</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <p>Set the dimension of the embedding matrix: the larger this value, the deeper our machine learning model is, the more features it can detect in the data. But the larger this value, the longer the model will take to train.</p>
+          <pre><code class="python">
+embedding_dim = 100</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <p>Maximum sequence length: we have already set this parameter earlier.</p>
+<pre><code class="python">
+max_len</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <h2>5. Model training</h2>
+          <p>Let's set out model:</p>
+          <pre><code class="python">
+# Import the necessary classes from the TensorFlow Keras library
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense
+
+# Create a sequential model
+model = Sequential([
+    # Embedding layer for creating word embeddings
+    Embedding(vocab_size, embedding_dim, input_length=max_len),
+    # Conv1D layer for convolution on one-dimensional sequences
+    Conv1D(128, 5, activation='relu'),
+    # GlobalMaxPooling1D layer to extract features from the convolutional layer
+    GlobalMaxPooling1D(),
+    # Fully connected layer with 10 neurons and ReLU activation function
+    Dense(10, activation='relu'),
+    # Output fully connected layer with num_classes neurons and softmax activation function
+    Dense(num_classes, activation='softmax')
+])
+
+# Compile the model with the Adam optimizer, 
+# the sparse_categorical_crossentropy loss function and the accuracy metric
+model.compile(optimizer='adam',
+loss='sparse_categorical_crossentropy',
+metrics=['accuracy'])
+
+# Output the structure of the model
+model.summary()</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+  <div>
+    <p> This is our model summary:</p>
+    <div class="model-summary">
+        <table class="layer-table">
+            <p><strong>Model:</strong> "sequential"</p>
+            <thead>
+                <tr class="layer-header">
+                    <th>Layer (type)</th>
+                    <th>Output Shape</th>
+                    <th>Param #</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>embedding (Embedding)</td>
+                    <td>(None, 500, 100)</td>
+                    <td>12425300</td>
+                </tr>
+                <tr>
+                    <td>conv1d (Conv1D)</td>
+                    <td>(None, 496, 128)</td>
+                    <td>64128</td>
+                </tr>
+                <tr>
+                    <td>global_max_pooling1d (GlobalMaxPooling1D)</td>
+                    <td>(None, 128)</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>dense (Dense)</td>
+                    <td>(None, 10)</td>
+                    <td>1290</td>
+                </tr>
+                <tr>
+                    <td>dense_1 (Dense)</td>
+                    <td>(None, 2)</td>
+                    <td>22</td>
+                </tr>
+            </tbody>
+            <p><strong>Total params:</strong> 12490740 (47.65 MB)</p>
+    <p><strong>Trainable params:</strong> 12490740 (47.65 MB)</p>
+    <p><strong>Non-trainable params:</strong> 0 (0.00 Byte)</p>
+        </table>
+    </div>
+    <p>Now let's draw the structure of the model.</p><pre><code class="python">
+# Import the plot_model function from the TensorFlow Keras library
+from tensorflow.keras.utils import plot_model
+
+# Visualize the structure of the model
+plot_model(model)
+
+
+# Note: To save the model image to the file 'model_plot.png'
+# specify show_shapes=True and show_layer_names=True to display layer shapes and their names
+# plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
+# This code will create an image of your model structure and save it to a file called model_plot.png</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+            <div class="illustration">
+            <img src="https://raw.githubusercontent.com/vifirsanova/conv-net/main/model-summary.png" alt="Convolution Operation Illustration"></div>
+              <p>Yay! Let's start training!</p>
+<p>This code starts the model training process on the X_train training data with the corresponding y_train labels. During the model training process, one epoch will be performed (epochs=1), the data will be processed in batches of 32 samples (batch_size=32), and validation data will be used from X_val and y_val to evaluate the model performance.</p>
+              <pre><code class="python">
+# Train the model using X_train training data and y_train labels
+history = model.fit(X_train, y_train, # model training data
+                epochs=1, # number of training epochs
+                batch_size=32, # data batch size
+                validation_data=(X_val, y_val)) # model validation data</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <p>Let's evaluate the accuracy of the trained model.</p>
+    <p>This code evaluates the performance of the trained model on the test dataset (X_test and y_test). The evaluation results include the value of the loss function (loss) and accuracy (accuracy).</p><pre><code class="python">
+# We evaluate the performance of the model on test data X_test and labels y_test
+loss, accuracy = model.evaluate(X_test, y_test)
+# Display the accuracy on the test sample
+f'Test accuracy: {accuracy}'</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <p>Now, let's get predictions from the test sample.</p>
+    <p>After this operation is completed, the predictions variable will contain the predicted probabilities for each class for each example in the test dataset.</p><pre><code class="python">
+# Get model predictions on test data X_test
+predictions = model.predict(X_test)
+predictions</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <p>All these numbers are not human readable at all!</p><p>Firstly, the texts are encoded...</p>
+    <pre><code class="python">
+def detokenize(tokenized_text, tokenizer):
+    """
+    A function to convert tokenized text back to its original form.
+    
+    Arguments:
+    tokenized_text -- tokenized text (list of indices or tokens)
+    tokenizer -- a tokenizer object containing the index_word dictionary
+    
+    Returns:
+    Source text as a string.
+    """
+    index_word = tokenizer.index_word # Get the index_word dictionary from tokenizer
+    return " ".join(index_word.get(token, '') for token in tokenized_text)</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <p>Secondly, the predictions are encoded...</p>
+    <pre><code class="python">
+import numpy as np
+
+# Use the detokenize function
+# to restore the original text from the tokenized sequence X_test[7]
+# Use np.argmax
+# to determine the class index with the highest probability in predictions[7]
+detokenize(X_test[7], tokenizer), np.argmax(predictions[7])</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+    <h2>6. Confustion matrix</h2>
+    <p>The confusion matrix shows which classes were correctly and incorrectly predicted by the model on the test dataset y_test and predictions.</p>
+    <pre><code class="python">
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
+
+# Get true labels and predicted labels
+true_labels = y_test
+predicted_labels = [np.argmax(predictions[i]) for i in range(len(predictions))]
+
+# Define unique class labels
+labels = np.unique(true_labels)
+# Calculate the confusion matrix
+cm = confusion_matrix(true_labels, predicted_labels, labels=labels)
+
+plt.figure(figsize=(8, 6))
+# Build a heat map of the error matrix
+sns.set(font_scale=1.2) # Set the font scale for better readability
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
+        xticklabels=labels, yticklabels=labels) # Display a matrix with numeric labels
+plt.xlabel('Predicted Labels')
+plt.ylabel('True Labels')
+plt.title('Confusion Matrix')
+plt.show()</code><button class="copy-btn" onclick="copyToClipboard(this)">Copy</button></pre>
+            <div class="illustration">
+            <img src="https://raw.githubusercontent.com/vifirsanova/conv-net/main/confusion-martix.png" alt="Convolution Operation Illustration">
+        </div>
+    <p>Wow! The results are amazing. Feel free to use and change the code and use different data. Have fun coding!</p>
+        </div>
+          <h3 class="intro"> by <a href="htps://vifirsanova.github.io"> V. Firsanova </a></h3>
+    </div>
+</div>
+    <script>
+        function copyToClipboard(button) {
+            const codeBlock = button.previousElementSibling;
+            const textArea = document.createElement('textarea');
+            textArea.value = codeBlock.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+                button.textContent = 'Copy';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
